@@ -1,0 +1,31 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './components/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/Home/Navbar';
+import Auth from './components/Home/Auth';
+import Hero from './components/Home/Hero';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Hero />} />
+          {/* <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          /> */}
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
