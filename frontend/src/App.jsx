@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './components/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './components/Auth/AuthContext';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Navbar from './components/Home/Navbar';
 import Auth from './components/Home/Auth';
 import Hero from './components/Home/Hero';
+import Dashboard from './components/Auth/Dashboard'
 
 function App() {
   return (
@@ -14,14 +15,14 @@ function App() {
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Hero />} />
-          {/* <Route
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
             }
-          /> */}
+          />
         </Routes>
       </Router>
     </AuthProvider>
