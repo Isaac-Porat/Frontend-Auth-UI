@@ -76,6 +76,12 @@ async def register_user(user: OAuth2PasswordRequestForm) -> Token:
 
             return Token(access_token=access_token, token_type="bearer")
 
+        except HTTPException as e:
+            raise HTTPException(
+                status_code=e.status_code,
+                detail=str(e.detail)
+            )
+
         except Exception as e:
             logger.error(f"Unexpected error during registration: {e}", exc_info=True)
             raise HTTPException(
