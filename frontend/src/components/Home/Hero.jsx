@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../Auth/AuthContext';
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   const { user } = useAuth();
@@ -16,20 +17,20 @@ const Hero = () => {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           {user ? (
-            <button className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold shadow-lg hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center">
+            <Link to="/dashboard" className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold shadow-lg hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center">
               Go to Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
+            </Link>
           ) : (
             <>
               <button className="px-6 py-3 bg-white text-green-600 rounded-full font-semibold shadow-lg hover:bg-opacity-90 transition duration-300 ease-in-out flex items-center justify-center">
                 Learn more
                 <ArrowRight className="ml-2 h-5 w-5" />
               </button>
-              <button className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold shadow-lg hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center">
+              <Link to="/auth" className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold shadow-lg hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center">
                 Get started
                 <Sparkles className="ml-2 h-5 w-5" />
-              </button>
+              </Link>
             </>
           )}
         </div>
