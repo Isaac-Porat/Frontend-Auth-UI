@@ -6,10 +6,11 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 import jwt
 from sqlalchemy.orm import Session
-from schemas import Token
+from schemas import Token, UserSchema
 from models import UserModel
 from database import engine
 from dotenv import load_dotenv
+from schemas import UserUpdate
 
 load_dotenv()
 
@@ -91,14 +92,10 @@ async def register_user(user: OAuth2PasswordRequestForm) -> Token:
 
 async def login_user(user: OAuth2PasswordRequestForm = Depends()) -> Token:
     with Session(engine) as session:
-
-        logger.warning(user.username)
-        logger.warning(user.password)
-
         try:
             queryUser = session.query(UserModel).filter(UserModel.username == user.username).first()
 
-            if user is None:
+            if queryUser is None:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Incorrect username or password",
@@ -117,10 +114,7 @@ async def login_user(user: OAuth2PasswordRequestForm = Depends()) -> Token:
             return Token(access_token=access_token, token_type="bearer")
 
         except HTTPException as e:
-            raise HTTPException(
-                status_code=e.status_code,
-                detail=str(e.detail)
-            )
+            raise e
 
         except Exception as e:
             logger.error(f"Unexpected error during login: {e}", exc_info=True)
@@ -128,5 +122,70 @@ async def login_user(user: OAuth2PasswordRequestForm = Depends()) -> Token:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred"
             )
+
+async def get_user_data(token: str) -> UserSchema:
+    with Session(engine) as session:
+        try:
+            user = session.query(UserModel).filter(UserModel.username == token).first()
+
+            if user is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
+
+            return UserSchema(
+                username=user.username,
+                password=user.password
+            )
+
+        except HTTPException as e:
+            raise e
+
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching user data: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while fetching user data"
+            )
+
+async def update_user_data(username: str, user_update: UserUpdate) -> UserSchema:
+    try:
+        with Session(engine) as session:
+            user = session.query(UserModel).filter(UserModel.username == username).first()
+            if not user:
+                raise HTTPException(
+                    status_code=404,
+                    detail="User not found"
+                )
+
+            if user_update.username:
+                existing_user = session.query(UserModel).filter(UserModel.username == user_update.username).first()
+                if existing_user and existing_user.id != user.id:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Username already taken"
+                    )
+                user.username = user_update.username
+
+            if user_update.password:
+                user.password = get_password_hash(user_update.password)
+
+            session.commit()
+            session.refresh(user)
+
+            updated_user = UserSchema(
+                username=user.username,
+                password="**********"
+            )
+
+            return {"message": "User updated successfully", "user": updated_user}
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        logger.error(f"Unexpected error during user update: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
