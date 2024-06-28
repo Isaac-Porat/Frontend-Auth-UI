@@ -8,13 +8,14 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Auth/AuthContext';
 
 const formSchema = z.object({
-  username: z.string().min(8, {
-    message: "Please enter a valid email address.",
+  username: z.string().min(4, {
+    message: "Username must be at least 4 characters.",
   }),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
+  password: z.string().min(4, {
+    message: "Password must be at least 4 characters.",
   }),
 });
 
@@ -23,6 +24,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState({ type: null, message: null });
   const navigate = useNavigate();
+  const { login, signup } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -32,92 +34,37 @@ const Auth = () => {
     },
   });
 
-  const loginUser = async (formData) => {
+  const handleAuthentication = async (formData, isLogin) => {
     setIsLoading(true);
     setResponse({ type: null, message: null });
 
-    const formBody = new FormData();
-    formBody.append('username', formData.username);
-    formBody.append('password', formData.password);
-
     try {
-      const response = await fetch('http://localhost:8000/login', {
-        method: 'POST',
-        body: formBody,
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const result = await response.json();
-      setResponse({ type: 'success', message: 'Login successful. Welcome back!' });
-      console.log('Login successful:', result);
-
-      const accessToken = result["access_token"]
-      localStorage.setItem('accessToken', accessToken);
-
-      navigate('/');
-
-    } catch (error) {
-      setResponse({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'An unknown error occurred'
-      });
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const registerUser = async (formData) => {
-    setIsLoading(true);
-    setResponse({ type: null, message: null });
-
-    const formBody = new FormData();
-    formBody.append('username', formData.username);
-    formBody.append('password', formData.password);
-
-    try {
-      const response = await fetch('http://localhost:8000/register', {
-        method: 'POST',
-        body: formBody,
-      });
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          setResponse({ type: 'error', message: 'Username already exists' });
-        } else {
-          throw new Error('Registration failed');
-        }
+      let success;
+      if (isLogin) {
+        success = await login(formData);
       } else {
-        const result = await response.json();
-        setResponse({ type: 'success', message: 'Registration successful. Your account has been created.' });
-        console.log('Registration successful:', result);
-
-        const accessToken = result["access_token"]
-        localStorage.setItem('accessToken', accessToken);
-
-        navigate('/');
+        success = await signup(formData);
       }
 
+      if (success) {
+        setResponse({ type: 'success', message: `${isLogin ? 'Login' : 'Registration'} successful!` });
+        navigate('/dashboard');
+      } else {
+        throw new Error(`${isLogin ? 'Login' : 'Registration'} failed`);
+      }
     } catch (error) {
       setResponse({
         type: 'error',
         message: error instanceof Error ? error.message : 'An unknown error occurred'
       });
-      console.error('Registration error:', error);
+      console.error(`${isLogin ? 'Login' : 'Registration'} error:`, error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const onSubmit = (data) => {
-    if (activeTab === 'login') {
-      loginUser(data);
-    } else {
-      registerUser(data);
-    }
+    handleAuthentication(data, activeTab === 'login');
   };
 
   const AuthForm = ({ action }) => (
