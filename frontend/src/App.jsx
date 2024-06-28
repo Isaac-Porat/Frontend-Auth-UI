@@ -6,6 +6,7 @@ import Navbar from './components/Home/Navbar';
 import Auth from './components/Home/Auth';
 import Hero from './components/Home/Hero';
 import Dashboard from './components/Auth/Dashboard'
+import { Toaster } from "./components/ui/toaster"
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           />
         </Routes>
       </Router>
+      <Toaster />
     </AuthProvider>
   );
 }
